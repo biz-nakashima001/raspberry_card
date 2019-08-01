@@ -1,0 +1,46 @@
+# -*- coding: UTF-8 -*-
+import nfc,requests,datetime,jtalk,time
+
+def on_startup(targets):
+        print("ready..")
+        return targets
+
+def on_connect(tag):
+        if tag.ndef:
+            record = tag.ndef.records[0]
+            memberId = record.data[3:9]
+            entryDate = str(datetime.datetime.today())
+            output = "Member ID " + memberId + " : " + entryDate
+            print(output)
+            files = {'payload': (None, '{"channel": "#test", "username":"Check. Member Card Entry now.", "text":"'+ output +'", "icon_emoji": ":watch:"}'),}
+            response = requests.post('https://hooks.slack.com/services/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', files=files)
+            #jtalk.jtalk("会員番号" + memberId + "番")
+            #time.sleep(3)
+            if memberId == "000001":
+                jtalk.hello()
+                time.sleep(3)
+
+            if memberId == "000002":
+                jtalk.goodby()
+                time.sleep(3)
+            if memberId == "000003":
+                jtalk.jtalk("期限が切れています。スタッフにお声がけ下さい。")
+                #jtalk.kigen()
+                time.sleep(3)
+
+def on_release(tag):
+        print("on_release()")
+        if tag.ndef:
+            print(tag.ndef.message.pretty())
+        return True
+
+clf = nfc.ContactlessFrontend('usb')
+while True:
+    if clf:
+        print("Clf: {}".format(clf))
+        clf.connect(rdwr={
+                'on-startup': on_startup,
+                'on-connect': on_connect,
+                'on-release': on_release
+        })
+clf.close()
